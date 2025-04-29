@@ -241,18 +241,64 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 }
 // ---------------------------------------HOME SCREEN---------------------------------------
-// Placeholder Home Screen
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  void logout(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
-      appBar: AppBar(title: const Text("Weatherly Home")),
-      body: const Center(
-        child: Text(
-          "Home Screen - Welcome!",
-          style: TextStyle(fontSize: 24),
+      appBar: AppBar(
+        title: const Text('Weatherly Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => logout(context),
+          )
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Welcome, ${user?.email ?? "User"}!",
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: () {}, // TODO: Go to Weather Forecast screen
+              child: const Text("Weather Forecast"),
+            ),
+            ElevatedButton(
+              onPressed: () {}, // TODO: Go to Map screen
+              child: const Text("View Map"),
+            ),
+            ElevatedButton(
+              onPressed: () {}, // TODO: Go to Postcard Maker
+              child: const Text("Create Postcard"),
+            ),
+            ElevatedButton(
+              onPressed: () {}, // TODO: Go to Community Notes
+              child: const Text("Community Notes"),
+            ),
+            ElevatedButton(
+              onPressed: () {}, // TODO: Go to Profile screen
+              child: const Text("Profile"),
+            ),
+            ElevatedButton(
+              onPressed: () {}, // TODO: Go to Theme settings
+              child: const Text("Theme Settings"),
+            ),
+          ],
         ),
       ),
     );
