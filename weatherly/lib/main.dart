@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -305,7 +308,11 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: () {}, // TODO: Go to Weather Forecast screen
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const WeatherScreen()),
+                );
+              },
               child: const Text("Weather Forecast"),
             ),
             ElevatedButton(
@@ -329,6 +336,193 @@ class HomeScreen extends StatelessWidget {
               child: const Text("Theme Settings"),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+// ---------------------------------------WEATHER FORECAST SCREEN---------------------------------------
+
+class WeatherScreen extends StatefulWidget {
+  const WeatherScreen({super.key});
+
+  @override
+  State<WeatherScreen> createState() => _WeatherScreenState();
+}
+
+class _WeatherScreenState extends State<WeatherScreen> {
+  final TextEditingController cityController = TextEditingController();
+  bool isLoading = false;
+
+  String city = "New York";
+  String temperature = "";
+  String condition = "";
+  List<Map<String, String>> forecast = [];
+
+  final String apiKey = "ff357a23038b33c7a1e77df3acbac565"; // Replace with your real API key
+
+  Future<void> getWeather() async {
+    final enteredCity = cityController.text.trim();
+    if (enteredCity.isEmpty) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final urlCurrent = Uri.parse(
+          "https://api.openweathermap.org/data/2.5/weather?q=$enteredCity&appid=$apiKey&units=metric");
+      final urlForecast = Uri.parse(
+          "https://api.openweathermap.org/data/2.5/forecast?q=$enteredCity&appid=$apiKey&units=metric");
+
+      final responseCurrent = await http.get(urlCurrent);
+      final responseForecast = await http.get(urlForecast);
+
+      print('Current weather response: ${responseCurrent.body}');
+      print('Forecast response: ${responseForecast.body}');
+
+      if (responseCurrent.statusCode == 200 && responseForecast.statusCode == 200) {
+        final currentData = json.decode(responseCurrent.body);
+        final forecastData = json.decode(responseForecast.body);
+
+        setState(() {
+          city = currentData["name"];
+          temperature = "${currentData["main"]["temp"].round()}°C";
+          condition = currentData["weather"][0]["main"];
+
+          forecast = [];
+          for (var i = 0; i < forecastData["list"].length; i += 8) {
+            final dayData = forecastData["list"][i];
+            forecast.add({
+              "day": getDayFromTimestamp(dayData["dt"]),
+              "temp": "${dayData["main"]["temp"].round()}°C",
+              "icon": getWeatherEmoji(dayData["weather"][0]["main"]),
+            });
+          }
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching weather data')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  String getDayFromTimestamp(int timestamp) {
+    final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+    return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.weekday % 7];
+  }
+
+  String getWeatherEmoji(String condition) {
+    switch (condition.toLowerCase()) {
+      case "clear":
+        return "☀️";
+      case "clouds":
+        return "☁️";
+      case "rain":
+        return "🌧️";
+      case "snow":
+        return "❄️";
+      case "thunderstorm":
+        return "⛈️";
+      case "drizzle":
+        return "🌦️";
+      default:
+        return "🌤️";
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Weather Forecast")),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: cityController,
+                decoration: const InputDecoration(
+                  labelText: "Enter city",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Center(
+                child: ElevatedButton(
+                  onPressed: getWeather,
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text("Get Weather"),
+                ),
+              ),
+              const SizedBox(height: 30),
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      city,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      temperature.isNotEmpty && condition.isNotEmpty
+                          ? "$temperature | $condition"
+                          : "No weather data",
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 30),
+              const Text(
+                "7-Day Forecast",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 120,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: forecast.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    final day = forecast[index];
+                    return Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(day["day"]!, style: const TextStyle(fontSize: 16)),
+                          Text(day["icon"]!, style: const TextStyle(fontSize: 28)),
+                          Text(day["temp"]!, style: const TextStyle(fontSize: 16)),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );

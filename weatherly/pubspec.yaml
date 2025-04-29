@@ -51,7 +51,7 @@ dependencies:
   provider: ^6.1.0
 
   # Other helpful packages you’ll probably add soon
-  http: ^1.2.0 # for API calls (OpenWeatherMap)
+  http: ^1.2.1 # for API calls (OpenWeatherMap)
   flutter_map: ^5.0.0 # for Leaflet maps (alternative to Google Maps)
 
   
