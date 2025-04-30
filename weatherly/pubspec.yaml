@@ -50,6 +50,9 @@ dependencies:
   # State Management (Optional, but recommended)
   provider: ^6.1.0
 
+  intl: ^0.18.1
+
+
   # Other helpful packages you’ll probably add soon
   http: ^1.2.1 # for API calls (OpenWeatherMap)
   flutter_map: ^5.0.0 # for Leaflet maps (alternative to Google Maps)

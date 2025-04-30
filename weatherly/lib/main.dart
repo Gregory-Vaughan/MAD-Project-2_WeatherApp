@@ -3,6 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+
 
 
 void main() async {
@@ -357,7 +359,17 @@ class _WeatherScreenState extends State<WeatherScreen> {
   String city = "New York";
   String temperature = "";
   String condition = "";
+  String feelsLike = "";
+  String humidity = "";
+  String wind = "";
+  String pressure = "";
+  String visibility = "";
+  String sunrise = "";
+  String sunset = "";
+  String currentIcon = "";
+  String currentHourlyIcon = "";
   List<Map<String, String>> forecast = [];
+  List<Map<String, String>> hourlyForecast = [];
 
   final String apiKey = "ff357a23038b33c7a1e77df3acbac565"; // Replace with your real API key
 
@@ -385,20 +397,50 @@ class _WeatherScreenState extends State<WeatherScreen> {
         final currentData = json.decode(responseCurrent.body);
         final forecastData = json.decode(responseForecast.body);
 
+        List<Map<String, String>> daily = [];
+        List<Map<String, String>> hourly = [];
+
+        // Daily forecast - every 8 entries (3h x 8 = 24h)
+        for (int i = 0; i < forecastData["list"].length; i += 8) {
+          final entry = forecastData["list"][i];
+          daily.add({
+            "day": getDayFromTimestamp(entry["dt"]),
+            "temp": "${entry["main"]["temp"].round()}°C",
+            "icon": getEmojiFromIconCode(entry["weather"][0]["icon"]),
+          });
+        }
+// Hourly forecast - next 8 slots (3h intervals = 24h)
+        for (int i = 0; i < 8; i++) {
+          final entry = forecastData["list"][i];
+          final time = DateTime.fromMillisecondsSinceEpoch(entry["dt"] * 1000);
+          final hour = DateFormat('HH:mm').format(time); // or 'h a' for 12-hour format
+          hourly.add({
+            "hour": DateFormat('h a').format(time), // gives "11 PM", "2 AM", etc.
+            "temp": "${entry["main"]["temp"].round()}°C",
+            "icon": getEmojiFromIconCode(entry["weather"][0]["icon"]),
+          });
+        }
+        
+        if (hourly.isNotEmpty) {
+          currentHourlyIcon = hourly[0]["icon"] ?? "";
+        }
+
+
         setState(() {
           city = currentData["name"];
           temperature = "${currentData["main"]["temp"].round()}°C";
-          condition = currentData["weather"][0]["main"];
+          condition = currentData["weather"][0]["description"];
+          currentIcon = currentData["weather"][0]["icon"]; 
+          forecast = daily;
+          hourlyForecast = hourly;
+          feelsLike = "${currentData["main"]["feels_like"].round()}°C";
+          humidity = "${currentData["main"]["humidity"]}%";
+          wind = "${currentData["wind"]["speed"]} m/s ${_getDirection(currentData["wind"]["deg"])}";
+          pressure = "${currentData["main"]["pressure"]} hPa";
+          visibility = "${(currentData["visibility"] / 1000).toStringAsFixed(1)} km";
 
-          forecast = [];
-          for (var i = 0; i < forecastData["list"].length; i += 8) {
-            final dayData = forecastData["list"][i];
-            forecast.add({
-              "day": getDayFromTimestamp(dayData["dt"]),
-              "temp": "${dayData["main"]["temp"].round()}°C",
-              "icon": getWeatherEmoji(dayData["weather"][0]["main"]),
-            });
-          }
+          sunrise = _formatTime(currentData["sys"]["sunrise"]);
+          sunset = _formatTime(currentData["sys"]["sunset"]);
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -416,6 +458,18 @@ class _WeatherScreenState extends State<WeatherScreen> {
     }
   }
 
+  String _formatTime(int timestamp) {
+    final time = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+    return DateFormat.jm().format(time); // 5:30 AM, 7:15 PM
+  }
+
+  String _getDirection(num deg) {
+    const directions = [
+      "N", "NE", "E", "SE", "S", "SW", "W", "NW", "N"
+    ];
+    return directions[((deg % 360) / 45).round()];
+  }
+  
   String getDayFromTimestamp(int timestamp) {
     final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
     return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.weekday % 7];
@@ -440,89 +494,201 @@ class _WeatherScreenState extends State<WeatherScreen> {
     }
   }
 
+  String getEmojiFromIconCode(String iconCode) {
+    switch (iconCode) {
+      case "01d":
+        return "☀️";
+      case "01n":
+        return "🌙";
+      case "02d":
+      case "02n":
+        return "⛅";
+      case "03d":
+      case "03n":
+      case "04d":
+      case "04n":
+        return "☁️";
+      case "09d":
+      case "09n":
+      case "10d":
+      case "10n":
+        return "🌧️";
+      case "11d":
+      case "11n":
+        return "⛈️";
+      case "13d":
+      case "13n":
+        return "❄️";
+      case "50d":
+      case "50n":
+        return "🌫️";
+      default:
+        return "🌤️";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Weather Forecast")),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                controller: cityController,
-                decoration: const InputDecoration(
-                  labelText: "Enter city",
-                  border: OutlineInputBorder(),
-                ),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: cityController,
+              decoration: const InputDecoration(
+                labelText: "Enter city",
+                border: OutlineInputBorder(),
               ),
-              const SizedBox(height: 10),
-              Center(
-                child: ElevatedButton(
-                  onPressed: getWeather,
-                  child: isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text("Get Weather"),
-                ),
+            ),
+            const SizedBox(height: 10),
+            Center(
+              child: ElevatedButton(
+                onPressed: getWeather,
+                child: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text("Get Weather"),
               ),
-              const SizedBox(height: 30),
-              Center(
-                child: Column(
-                  children: [
-                    Text(
-                      city,
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      temperature.isNotEmpty && condition.isNotEmpty
-                          ? "$temperature | $condition"
-                          : "No weather data",
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                  ],
-                ),
+            ),
+            const SizedBox(height: 30),
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    city,
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    temperature.isNotEmpty && condition.isNotEmpty
+                        ? "$temperature | $condition"
+                        : "No weather data",
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                ],
               ),
-              const SizedBox(height: 30),
-              const Text(
+            ),
+            const SizedBox(height: 20),
+            const Center(
+              child: Text(
                 "7-Day Forecast",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 120,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: forecast.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 12),
-                  itemBuilder: (context, index) {
-                    final day = forecast[index];
-                    return Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[50],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(day["day"]!, style: const TextStyle(fontSize: 16)),
-                          Text(day["icon"]!, style: const TextStyle(fontSize: 28)),
-                          Text(day["temp"]!, style: const TextStyle(fontSize: 16)),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+            ),
+            const SizedBox(height: 10),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 120),
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                shrinkWrap: true,
+                itemCount: forecast.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  final day = forecast[index];
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(day["day"]!, style: const TextStyle(fontSize: 16)),
+                        Text(day["icon"]!, style: const TextStyle(fontSize: 28)),
+                        Text(day["temp"]!, style: const TextStyle(fontSize: 16)),
+                      ],
+                    ),
+                  );
+                },
               ),
-              const SizedBox(height: 24),
-            ],
-          ),
+            ),
+            const SizedBox(height: 30),
+            const Center(
+              child: Text(
+                "Hourly Forecast",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 10),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 110),
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                shrinkWrap: true,
+                itemCount: hourlyForecast.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  final hour = hourlyForecast[index];
+                  return Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.purple[50],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(hour["hour"]!, style: const TextStyle(fontSize: 14)),
+                        Text(hour["icon"]!, style: const TextStyle(fontSize: 24)),
+                        Text(hour["temp"]!, style: const TextStyle(fontSize: 14)),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 30),
+            const Center(
+              child: Text(
+                "Current Conditions",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: Text(
+                    currentHourlyIcon.isNotEmpty
+                        ? currentHourlyIcon
+                        : getWeatherEmoji(condition),
+                    style: const TextStyle(fontSize: 48),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Feels Like: $feelsLike"),
+                        Text("Humidity: $humidity"),
+                        Text("Wind: $wind"),
+                        Text("Pressure: $pressure"),
+                        Text("Visibility: $visibility"),
+                        Text("Sunrise: $sunrise"),
+                        Text("Sunset: $sunset"),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
