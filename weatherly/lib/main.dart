@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-
+//import 'community_notes.dart';
 
 
 void main() async {
@@ -325,6 +325,17 @@ class HomeScreen extends StatelessWidget {
               onPressed: () {}, // TODO: Go to Postcard Maker
               child: const Text("Create Postcard"),
             ),
+            /*
+            ElevatedButton(
+            onPressed: () {
+             Navigator.of(context).push(
+             MaterialPageRoute(builder: (_) => const CommunityNotesScreen()),
+             );
+             },
+            child: const Text("Community Notes"),
+            ),
+            */
+
             ElevatedButton(
               onPressed: () {}, // TODO: Go to Community Notes
               child: const Text("Community Notes"),
