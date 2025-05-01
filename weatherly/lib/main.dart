@@ -5,6 +5,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 //import 'community_notes.dart';
+//import 'profile.dart';
+
 
 
 void main() async {
@@ -321,10 +323,12 @@ class HomeScreen extends StatelessWidget {
               onPressed: () {}, // TODO: Go to Map screen
               child: const Text("View Map"),
             ),
+
             ElevatedButton(
               onPressed: () {}, // TODO: Go to Postcard Maker
               child: const Text("Create Postcard"),
             ),
+
             /*
             ElevatedButton(
             onPressed: () {
@@ -336,14 +340,17 @@ class HomeScreen extends StatelessWidget {
             ),
             */
 
-            ElevatedButton(
-              onPressed: () {}, // TODO: Go to Community Notes
-              child: const Text("Community Notes"),
+           /*
+           ElevatedButton(
+            onPressed: () {
+            Navigator.of(context).push(
+             MaterialPageRoute(builder: (_) => const ProfileScreen()),
+            );
+            },
+            child: const Text("Profile"),
             ),
-            ElevatedButton(
-              onPressed: () {}, // TODO: Go to Profile screen
-              child: const Text("Profile"),
-            ),
+           */
+
             ElevatedButton(
               onPressed: () {}, // TODO: Go to Theme settings
               child: const Text("Theme Settings"),
