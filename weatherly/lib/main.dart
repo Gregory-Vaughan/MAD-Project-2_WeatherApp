@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 //import 'community_notes.dart';
 //import 'profile.dart';
 //import 'theme_settings.dart';
-
+//import 'postcard_maker.dart';
 
 
 void main() async {
@@ -325,6 +325,21 @@ class HomeScreen extends StatelessWidget {
               child: const Text("View Map"),
             ),
 
+
+/*
+          ElevatedButton.icon(
+            icon: const Icon(Icons.post_add),
+           label: const Text("Make a Postcard"),
+            onPressed: () {
+           Navigator.push(
+          context,
+          MaterialPageRoute(
+          builder: (context) => const PostcardMakerScreen(),
+          ),
+        );
+      },
+    ),
+*/
             ElevatedButton(
               onPressed: () {}, // TODO: Go to Postcard Maker
               child: const Text("Create Postcard"),
