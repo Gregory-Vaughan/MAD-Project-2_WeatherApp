@@ -136,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                "“Wherever you go, no matter what the weather, always bring your own sunshine.”",
+                "“Wherever you go, no matter the weather, always bring your own sunshine, to make the day better.”",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 17,
