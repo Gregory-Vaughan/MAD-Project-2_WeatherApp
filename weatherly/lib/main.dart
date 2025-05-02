@@ -6,8 +6,10 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'community_notes.dart';
 import 'profile.dart';
-import 'theme_settings.dart';
 import 'postcard_maker.dart';
+import 'map.dart'; // for new map screen
+
+
 
 
 void main() async {
@@ -320,11 +322,17 @@ class HomeScreen extends StatelessWidget {
               },
               child: const Text("Weather Forecast"),
             ),
+
+// for new MAP screen
             ElevatedButton(
-              onPressed: () {}, // TODO: Go to Map screen
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MapScreen()),
+                );
+              },
               child: const Text("View Map"),
             ),
-
 
 
           ElevatedButton.icon(
