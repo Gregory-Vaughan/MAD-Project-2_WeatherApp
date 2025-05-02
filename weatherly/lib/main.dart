@@ -4,10 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-//import 'community_notes.dart';
-//import 'profile.dart';
-//import 'theme_settings.dart';
-//import 'postcard_maker.dart';
+import 'community_notes.dart';
+import 'profile.dart';
+import 'theme_settings.dart';
+import 'postcard_maker.dart';
 
 
 void main() async {
@@ -326,7 +326,7 @@ class HomeScreen extends StatelessWidget {
             ),
 
 
-/*
+
           ElevatedButton.icon(
             icon: const Icon(Icons.post_add),
            label: const Text("Make a Postcard"),
@@ -339,13 +339,13 @@ class HomeScreen extends StatelessWidget {
         );
       },
     ),
-*/
+
             ElevatedButton(
               onPressed: () {}, // TODO: Go to Postcard Maker
               child: const Text("Create Postcard"),
             ),
 
-            /*
+            
             ElevatedButton(
             onPressed: () {
              Navigator.of(context).push(
@@ -354,9 +354,8 @@ class HomeScreen extends StatelessWidget {
              },
             child: const Text("Community Notes"),
             ),
-            */
-
-           /*
+            
+           
            ElevatedButton(
             onPressed: () {
             Navigator.of(context).push(
@@ -365,7 +364,7 @@ class HomeScreen extends StatelessWidget {
             },
             child: const Text("Profile"),
             ),
-           */
+           
 
             ElevatedButton(
               onPressed: () {}, // TODO: Go to Theme settings

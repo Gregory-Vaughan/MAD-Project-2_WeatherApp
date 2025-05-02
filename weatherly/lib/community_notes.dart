@@ -1,4 +1,4 @@
-/*
+
 import 'package:flutter/material.dart';
 
 class CommunityNotesScreen extends StatelessWidget {
@@ -18,4 +18,3 @@ class CommunityNotesScreen extends StatelessWidget {
   }
 }
 
-*/

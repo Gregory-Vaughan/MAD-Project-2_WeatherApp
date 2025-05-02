@@ -1,5 +1,5 @@
 //screen name should probably be changed
-/*
+
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -66,4 +66,3 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-*/

@@ -1,5 +1,5 @@
 //note that this doesn't save the postcards or let's people share them yet.
-/*
+
 import 'package:flutter/material.dart';
 
 class PostcardMakerScreen extends StatefulWidget {
@@ -167,5 +167,3 @@ class _PostcardMakerScreenState extends State<PostcardMakerScreen> {
     );
   }
 }
-
-*/

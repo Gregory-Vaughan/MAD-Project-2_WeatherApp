@@ -1,4 +1,4 @@
-/*
+
 import 'package:flutter/material.dart';
 
 class ThemeSettingsScreen extends StatelessWidget {
@@ -40,4 +40,3 @@ class ThemeSettingsScreen extends StatelessWidget {
   }
 }
 
-*/
