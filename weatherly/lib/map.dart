@@ -4,6 +4,19 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 
+class WeatherMarker extends Marker {
+  final String condition;
+
+  WeatherMarker({
+    required this.condition,
+    required super.point,
+    required super.width,
+    required super.height,
+    required super.child,
+    super.alignment = Alignment.center,
+  });
+}
+
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
 
@@ -14,9 +27,14 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen> {
   final TextEditingController _cityController = TextEditingController();
   final MapController _mapController = MapController();
-  final String _apiKey = 'ff357a23038b33c7a1e77df3acbac565';
+  final String _apiKey = 'ff357a23038b33c7a1e77df3acbac565'; // Replace with your OpenWeatherMap API key
 
-  List<Marker> _markers = [];
+  List<WeatherMarker> _allMarkers = [];
+  List<WeatherMarker> _filteredMarkers = [];
+  String _selectedCondition = 'All';
+
+  LatLng _mapCenter = LatLng(39.8283, -98.5795);
+  double _mapZoom = 4.0;
 
   Future<void> _searchCity(String cityName) async {
     final String geocodingUrl =
@@ -40,7 +58,8 @@ class _MapScreenState extends State<MapScreen> {
 
             _mapController.move(LatLng(lat, lon), 10.0);
 
-            final marker = Marker(
+            final marker = WeatherMarker(
+              condition: condition,
               point: LatLng(lat, lon),
               width: 120,
               height: 100,
@@ -72,7 +91,8 @@ class _MapScreenState extends State<MapScreen> {
             );
 
             setState(() {
-              _markers = [marker];
+              _allMarkers.add(marker);
+              _applyFilter();
             });
           }
         } else {
@@ -136,6 +156,52 @@ class _MapScreenState extends State<MapScreen> {
     }
   }
 
+  void _applyFilter() {
+    setState(() {
+      if (_selectedCondition == 'All') {
+        _filteredMarkers = List.from(_allMarkers);
+      } else {
+        _filteredMarkers = _allMarkers
+            .where((marker) => marker.condition.toLowerCase() == _selectedCondition.toLowerCase())
+            .toList();
+      }
+    });
+  }
+
+  void _zoomIn() {
+    setState(() {
+      _mapZoom += 1;
+      _mapController.move(_mapCenter, _mapZoom);
+    });
+  }
+
+  void _zoomOut() {
+    setState(() {
+      _mapZoom -= 1;
+      _mapController.move(_mapCenter, _mapZoom);
+    });
+  }
+
+  Widget _buildFilterButton(String condition) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: ElevatedButton(
+        onPressed: () {
+          setState(() {
+            _selectedCondition = condition;
+            _applyFilter();
+          });
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _selectedCondition == condition
+              ? Colors.blueAccent
+              : Colors.grey[400],
+        ),
+        child: Text(condition),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -170,21 +236,67 @@ class _MapScreenState extends State<MapScreen> {
               ],
             ),
           ),
-          Expanded(
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: LatLng(39.8283, -98.5795),
-                initialZoom: 4.0,
-              ),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
               children: [
-                TileLayer(
-                  urlTemplate:
-                      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  subdomains: const ['a', 'b', 'c'],
+                _buildFilterButton('All'),
+                _buildFilterButton('Clear'),
+                _buildFilterButton('Clouds'),
+                _buildFilterButton('Rain'),
+                _buildFilterButton('Snow'),
+                _buildFilterButton('Thunderstorm'),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Stack(
+              children: [
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter: _mapCenter,
+                    initialZoom: _mapZoom,
+                    onPositionChanged: (position, hasGesture) {
+                      if (position.center != null && position.zoom != null) {
+                        setState(() {
+                          _mapCenter = position.center!;
+                          _mapZoom = position.zoom!;
+                        });
+                      }
+                    },
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      subdomains: const ['a', 'b', 'c'],
+                    ),
+                    MarkerLayer(
+                      markers: _filteredMarkers,
+                    ),
+                  ],
                 ),
-                MarkerLayer(
-                  markers: _markers,
+                Positioned(
+                  bottom: 20,
+                  right: 20,
+                  child: Column(
+                    children: [
+                      FloatingActionButton(
+                        heroTag: 'zoomIn',
+                        mini: true,
+                        onPressed: _zoomIn,
+                        child: const Icon(Icons.zoom_in),
+                      ),
+                      const SizedBox(height: 8),
+                      FloatingActionButton(
+                        heroTag: 'zoomOut',
+                        mini: true,
+                        onPressed: _zoomOut,
+                        child: const Icon(Icons.zoom_out),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
