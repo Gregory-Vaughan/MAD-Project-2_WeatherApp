@@ -9,27 +9,35 @@ import 'profile.dart';
 import 'postcard_maker.dart';
 import 'map.dart'; // for new map screen
 
+final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 
 
 
+//changed main app to fit theme settings better. May want to change it back to the original if this messes something up.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const WeatherlyApp());
+  runApp(const WeatherlyRoot());
 }
 
-class WeatherlyApp extends StatelessWidget {
-  const WeatherlyApp({super.key});
+
+class WeatherlyRoot extends StatelessWidget {
+  const WeatherlyRoot({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Weatherly',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const SplashScreen(),
-      debugShowCheckedModeBanner: false,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          title: 'Weatherly',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: mode,
+          home: const SplashScreen(),
+        );
+      },
     );
   }
 }

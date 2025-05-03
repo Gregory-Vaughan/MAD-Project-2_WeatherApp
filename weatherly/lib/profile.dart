@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'theme_settings.dart'; // Make sure this points to the correct ThemeSettingsScreen file
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -58,7 +59,7 @@ class ProfileScreen extends StatelessWidget {
                         subtitle: const Text("Celsius"),
                         trailing: const Icon(Icons.edit),
                         onTap: () {
-                          // Open temperature unit selector
+                          // Temperature settings navigation
                         },
                       ),
                       const Divider(),
@@ -66,9 +67,12 @@ class ProfileScreen extends StatelessWidget {
                         leading: const Icon(Icons.dark_mode),
                         title: const Text("App Theme"),
                         subtitle: const Text("Light"),
-                        trailing: const Icon(Icons.edit),
+                        trailing: const Icon(Icons.arrow_forward_ios),
                         onTap: () {
-                          // Open theme selector
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const ThemeSettingsScreen()),
+                          );
                         },
                       ),
                     ],
@@ -83,7 +87,7 @@ class ProfileScreen extends StatelessWidget {
                     leading: const Icon(Icons.logout, color: Colors.redAccent),
                     title: const Text("Logout"),
                     onTap: () {
-                      // Add logout or navigation functionality here
+                      // Add logout logic here
                     },
                   ),
                 ),
@@ -95,12 +99,16 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  static Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Text(
         title.toUpperCase(),
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey),
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+          color: Colors.grey,
+        ),
       ),
     );
   }
