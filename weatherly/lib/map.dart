@@ -182,127 +182,141 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  Widget _buildFilterButton(String condition) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: ElevatedButton(
-        onPressed: () {
-          setState(() {
-            _selectedCondition = condition;
-            _applyFilter();
-          });
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _selectedCondition == condition
-              ? Colors.blueAccent
-              : Colors.grey[400],
-        ),
-        child: Text(condition),
+Widget _buildFilterButton(String label, bool isDark) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+    child: ElevatedButton(
+      onPressed: () {
+        // Implement filter logic here
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: isDark ? Colors.grey[700] : Colors.grey[300],
+        foregroundColor: isDark ? Colors.white : Colors.black,
       ),
-    );
-  }
+      child: Text(label),
+    ),
+  );
+}
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Weather Map'),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _cityController,
-                    decoration: const InputDecoration(
-                      labelText: 'Enter city name',
-                      border: OutlineInputBorder(),
-                    ),
+@override
+
+Widget build(BuildContext context) {
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Weather Map'),
+    ),
+    body: Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _cityController,
+                  decoration: InputDecoration(
+                    labelText: 'Enter city name',
+                    border: const OutlineInputBorder(),
+                    filled: true,
+                    fillColor: isDark ? Colors.grey[800] : Colors.grey[200],
+                  ),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () {
-                    String cityName = _cityController.text.trim();
-                    if (cityName.isNotEmpty) {
-                      _searchCity(cityName);
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () {
+                  String cityName = _cityController.text.trim();
+                  if (cityName.isNotEmpty) {
+                    _searchCity(cityName);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: theme.colorScheme.onPrimary,
+                ),
+                child: const Text('Search'),
+              ),
+            ],
+          ),
+        ),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _buildFilterButton('All', isDark),
+              _buildFilterButton('Clear', isDark),
+              _buildFilterButton('Clouds', isDark),
+              _buildFilterButton('Rain', isDark),
+              _buildFilterButton('Snow', isDark),
+              _buildFilterButton('Thunderstorm', isDark),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Stack(
+            children: [
+              FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter: _mapCenter,
+                  initialZoom: _mapZoom,
+                  onPositionChanged: (position, hasGesture) {
+                    if (position.center != null && position.zoom != null) {
+                      setState(() {
+                        _mapCenter = position.center!;
+                        _mapZoom = position.zoom!;
+                      });
                     }
                   },
-                  child: const Text('Search'),
                 ),
-              ],
-            ),
-          ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildFilterButton('All'),
-                _buildFilterButton('Clear'),
-                _buildFilterButton('Clouds'),
-                _buildFilterButton('Rain'),
-                _buildFilterButton('Snow'),
-                _buildFilterButton('Thunderstorm'),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Stack(
-              children: [
-                FlutterMap(
-                  mapController: _mapController,
-                  options: MapOptions(
-                    initialCenter: _mapCenter,
-                    initialZoom: _mapZoom,
-                    onPositionChanged: (position, hasGesture) {
-                      if (position.center != null && position.zoom != null) {
-                        setState(() {
-                          _mapCenter = position.center!;
-                          _mapZoom = position.zoom!;
-                        });
-                      }
-                    },
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    subdomains: const ['a', 'b', 'c'],
                   ),
+                  MarkerLayer(
+                    markers: _filteredMarkers,
+                  ),
+                ],
+              ),
+              Positioned(
+                bottom: 20,
+                right: 20,
+                child: Column(
                   children: [
-                    TileLayer(
-                      urlTemplate:
-                          'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      subdomains: const ['a', 'b', 'c'],
+                    FloatingActionButton(
+                      heroTag: 'zoomIn',
+                      mini: true,
+                      onPressed: _zoomIn,
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      child: const Icon(Icons.zoom_in),
                     ),
-                    MarkerLayer(
-                      markers: _filteredMarkers,
+                    const SizedBox(height: 8),
+                    FloatingActionButton(
+                      heroTag: 'zoomOut',
+                      mini: true,
+                      onPressed: _zoomOut,
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      child: const Icon(Icons.zoom_out),
                     ),
                   ],
                 ),
-                Positioned(
-                  bottom: 20,
-                  right: 20,
-                  child: Column(
-                    children: [
-                      FloatingActionButton(
-                        heroTag: 'zoomIn',
-                        mini: true,
-                        onPressed: _zoomIn,
-                        child: const Icon(Icons.zoom_in),
-                      ),
-                      const SizedBox(height: 8),
-                      FloatingActionButton(
-                        heroTag: 'zoomOut',
-                        mini: true,
-                        onPressed: _zoomOut,
-                        child: const Icon(Icons.zoom_out),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+
 }

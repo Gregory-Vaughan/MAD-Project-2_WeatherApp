@@ -458,6 +458,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final weatherTextColor = isDarkMode ? Colors.black87 : Colors.black;
 
     return Scaffold(
       appBar: AppBar(
@@ -480,39 +482,60 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 10),
             if (_isLoading)
-            const CircularProgressIndicator()
-          else
-            Column(
-              children: [
-                const Text(
-                  'Your Current Weather',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
+              const CircularProgressIndicator()
+            else
+              Center(
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.only(top: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.yellow[100],
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 6,
+                        offset: Offset(2, 2),
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  _weatherInfo?.split('\n').first ?? '',
-                  style: const TextStyle(
-                    fontSize: 36,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Your Current Weather',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: weatherTextColor,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _weatherInfo?.split('\n').first ?? '',
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: weatherTextColor,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _weatherInfo?.split('\n').last ?? '',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: weatherTextColor,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  _weatherInfo?.split('\n').last ?? '',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-
+              ),
             const SizedBox(height: 20),
             Expanded(
               child: GridView.count(
@@ -580,6 +603,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 }
 
 
@@ -766,9 +790,17 @@ class _WeatherScreenState extends State<WeatherScreen> {
         return "🌤️";
     }
   }
-
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cardColor = theme.cardColor;
+    final textColor = theme.textTheme.bodyMedium?.color ?? Colors.black;
+
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final forecastTileColor = isDarkMode
+        ? Colors.deepPurple.shade200.withOpacity(0.3)
+        : Colors.lightGreen.shade200.withOpacity(0.4);
+
     return Scaffold(
       appBar: AppBar(title: const Text("Weather Forecast")),
       body: SingleChildScrollView(
@@ -778,9 +810,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
           children: [
             TextField(
               controller: cityController,
-              decoration: const InputDecoration(
+              style: TextStyle(color: textColor),
+              decoration: InputDecoration(
                 labelText: "Enter city",
-                border: OutlineInputBorder(),
+                labelStyle: TextStyle(color: textColor),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 10),
@@ -822,31 +856,45 @@ class _WeatherScreenState extends State<WeatherScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 120),
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                shrinkWrap: true,
-                itemCount: forecast.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 12),
-                itemBuilder: (context, index) {
-                  final day = forecast[index];
-                  return Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(day["day"]!, style: const TextStyle(fontSize: 16)),
-                        Text(day["icon"]!, style: const TextStyle(fontSize: 28)),
-                        Text(day["temp"]!, style: const TextStyle(fontSize: 16)),
-                      ],
-                    ),
-                  );
-                },
+            Container(
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 120),
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  shrinkWrap: true,
+                  itemCount: forecast.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    final day = forecast[index];
+                    return Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: forecastTileColor,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 4,
+                            offset: Offset(2, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(day["day"]!, style: TextStyle(fontSize: 16, color: textColor)),
+                          Text(day["icon"]!, style: const TextStyle(fontSize: 28)),
+                          Text(day["temp"]!, style: TextStyle(fontSize: 16, color: textColor)),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 30),
@@ -857,31 +905,45 @@ class _WeatherScreenState extends State<WeatherScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 110),
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                shrinkWrap: true,
-                itemCount: hourlyForecast.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 12),
-                itemBuilder: (context, index) {
-                  final hour = hourlyForecast[index];
-                  return Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.purple[50],
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(hour["hour"]!, style: const TextStyle(fontSize: 14)),
-                        Text(hour["icon"]!, style: const TextStyle(fontSize: 24)),
-                        Text(hour["temp"]!, style: const TextStyle(fontSize: 14)),
-                      ],
-                    ),
-                  );
-                },
+            Container(
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 110),
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  shrinkWrap: true,
+                  itemCount: hourlyForecast.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    final hour = hourlyForecast[index];
+                    return Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: forecastTileColor,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 4,
+                            offset: Offset(2, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(hour["hour"]!, style: TextStyle(fontSize: 14, color: textColor)),
+                          Text(hour["icon"]!, style: const TextStyle(fontSize: 24)),
+                          Text(hour["temp"]!, style: TextStyle(fontSize: 14, color: textColor)),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 30),
@@ -892,42 +954,49 @@ class _WeatherScreenState extends State<WeatherScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 16.0),
-                  child: Text(
-                    currentHourlyIcon.isNotEmpty
-                        ? currentHourlyIcon
-                        : getWeatherEmoji(condition),
-                    style: const TextStyle(fontSize: 48),
+            Container(
+              decoration: BoxDecoration(
+                color: forecastTileColor,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 4,
+                    offset: Offset(2, 2),
                   ),
-                ),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
+                ],
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16.0),
+                    child: Text(
+                      currentHourlyIcon.isNotEmpty
+                          ? currentHourlyIcon
+                          : getWeatherEmoji(condition),
+                      style: const TextStyle(fontSize: 48),
                     ),
+                  ),
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Feels Like: $feelsLike"),
-                        Text("Humidity: $humidity"),
-                        Text("Wind: $wind"),
-                        Text("Pressure: $pressure"),
-                        Text("Visibility: $visibility"),
-                        Text("Sunrise: $sunrise"),
-                        Text("Sunset: $sunset"),
+                        Text("Feels Like: $feelsLike", style: TextStyle(color: textColor)),
+                        Text("Humidity: $humidity", style: TextStyle(color: textColor)),
+                        Text("Wind: $wind", style: TextStyle(color: textColor)),
+                        Text("Pressure: $pressure", style: TextStyle(color: textColor)),
+                        Text("Visibility: $visibility", style: TextStyle(color: textColor)),
+                        Text("Sunrise: $sunrise", style: TextStyle(color: textColor)),
+                        Text("Sunset: $sunset", style: TextStyle(color: textColor)),
                       ],
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+
           ],
         ),
       ),

@@ -42,6 +42,17 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
+          Card(
+            elevation: 3,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: ListTile(
+              leading: const Icon(Icons.home, color: Colors.green),
+              title: const Text("Back to Home"),
+              onTap: () {
+                Navigator.pop(context); // or Navigator.pushReplacementNamed(context, '/home') if you use named routes
+              },
+            ),
+          ),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16),
