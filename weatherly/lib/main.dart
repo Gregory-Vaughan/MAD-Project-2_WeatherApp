@@ -343,17 +343,17 @@ class HomeScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  _buildDashboardButton(
-                    context,
-                    icon: Icons.post_add,
-                    label: "Make a Postcard",
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const PostcardMakerScreen()),
-                      );
-                    },
-                  ),
+                  // _buildDashboardButton(
+                  //   context,
+                  //   icon: Icons.post_add,
+                  //   label: "Make a Postcard",
+                  //   onPressed: () {
+                  //     Navigator.push(
+                  //       context,
+                  //       MaterialPageRoute(builder: (_) => const PostcardMakerScreen()),
+                  //     );
+                  //   },
+                  // ),
                   _buildDashboardButton(
                     context,
                     icon: Icons.notes,
