@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -10,6 +11,8 @@ import 'postcard_maker.dart';
 import 'map.dart'; // for new map screen
 import 'package:geolocator/geolocator.dart';
 import 'dart:async';
+import 'theme_settings.dart'; // Adjust path if needed
+
 
 
 
@@ -504,7 +507,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        'Your Current Weather',
+                        'Your Current Location Weather',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
@@ -592,7 +595,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: Icons.settings,
                     label: "Theme Settings",
                     onPressed: () {
-                      // TODO: Go to Theme settings
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ThemeSettingsScreen()),
+                      );
                     },
                   ),
                 ],
@@ -636,6 +642,19 @@ class _WeatherScreenState extends State<WeatherScreen> {
   List<Map<String, String>> hourlyForecast = [];
 
   final String apiKey = "ff357a23038b33c7a1e77df3acbac565"; // Replace with your real API key
+
+  Future<void> _loadCityFromFirestore() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
+
+  final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+  final savedCity = doc.data()?['city'];
+
+  if (savedCity != null && savedCity.toString().isNotEmpty) {
+    cityController.text = savedCity;
+    await getWeather(); // Automatically fetch weather
+  }
+}
 
   Future<void> getWeather() async {
     final enteredCity = cityController.text.trim();
@@ -791,6 +810,12 @@ class _WeatherScreenState extends State<WeatherScreen> {
     }
   }
   @override
+
+  void initState() {
+    super.initState();
+    _loadCityFromFirestore();
+  }
+
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cardColor = theme.cardColor;

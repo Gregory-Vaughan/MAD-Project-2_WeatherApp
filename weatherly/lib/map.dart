@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class WeatherMarker extends Marker {
   final String condition;
@@ -35,6 +38,19 @@ class _MapScreenState extends State<MapScreen> {
 
   LatLng _mapCenter = LatLng(39.8283, -98.5795);
   double _mapZoom = 4.0;
+
+  Future<void> _loadCityFromFirestore() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
+
+  final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+  final city = doc.data()?['city'];
+
+  if (city != null && city.toString().isNotEmpty) {
+    _cityController.text = city;
+    await _searchCity(city);
+  }
+}
 
   Future<void> _searchCity(String cityName) async {
     final String geocodingUrl =
@@ -199,6 +215,12 @@ Widget _buildFilterButton(String label, bool isDark) {
 }
 
 @override
+
+@override
+void initState() {
+  super.initState();
+  _loadCityFromFirestore();
+}
 
 Widget build(BuildContext context) {
   final theme = Theme.of(context);
