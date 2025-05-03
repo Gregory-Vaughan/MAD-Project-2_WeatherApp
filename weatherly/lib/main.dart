@@ -8,6 +8,10 @@ import 'community_notes.dart';
 import 'profile.dart';
 import 'postcard_maker.dart';
 import 'map.dart'; // for new map screen
+import 'package:geolocator/geolocator.dart';
+import 'dart:async';
+
+
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
 
@@ -289,13 +293,165 @@ Future<void> register() async {
   }
 }
 // ---------------------------------------HOME SCREEN---------------------------------------
-class HomeScreen extends StatelessWidget {
+
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String? _weatherInfo;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCurrentLocationWeather();
+  }
+
+  Future<void> _fetchCurrentLocationWeather() async {
+    try {
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() {
+          _weatherInfo = 'Location services are disabled.';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Check and request location permissions
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          setState(() {
+            _weatherInfo = 'Location permissions are denied.';
+            _isLoading = false;
+          });
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        setState(() {
+          _weatherInfo = 'Location permissions are permanently denied.';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Get current position with a timeout
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      ).timeout(const Duration(seconds: 10));
+
+      // Fetch weather data
+      const String apiKey = 'ff357a23038b33c7a1e77df3acbac565';
+      final String apiUrl =
+          'https://api.openweathermap.org/data/2.5/weather?lat=${position.latitude}&lon=${position.longitude}&appid=$apiKey&units=metric';
+
+      final response = await http.get(Uri.parse(apiUrl)).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final String cityName = data['name'];
+        final double temperature = data['main']['temp'];
+        final String description = data['weather'][0]['description'];
+        final String iconCode = data['weather'][0]['icon'];
+        final String emoji = _mapWeatherIconToEmoji(iconCode);
+
+        setState(() {
+          _weatherInfo =
+              '$emoji  City: $cityName\n${temperature.toStringAsFixed(1)}°C, $description';
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _weatherInfo = 'Failed to fetch weather data.';
+          _isLoading = false;
+        });
+      }
+    } on TimeoutException {
+      setState(() {
+        _weatherInfo = 'Request timed out. Please try again.';
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _weatherInfo = 'Error: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _mapWeatherIconToEmoji(String iconCode) {
+    switch (iconCode) {
+      case '01d':
+        return '☀️';
+      case '01n':
+        return '🌙';
+      case '02d':
+      case '02n':
+        return '🌤️';
+      case '03d':
+      case '03n':
+        return '☁️';
+      case '04d':
+      case '04n':
+        return '☁️';
+      case '09d':
+      case '09n':
+        return '🌧️';
+      case '10d':
+      case '10n':
+        return '🌦️';
+      case '11d':
+      case '11n':
+        return '⛈️';
+      case '13d':
+      case '13n':
+        return '❄️';
+      case '50d':
+      case '50n':
+        return '🌫️';
+      default:
+        return '🌈';
+    }
+  }
 
   void logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
+
+  Widget _buildDashboardButton(BuildContext context,
+      {required IconData icon,
+      required String label,
+      required VoidCallback onPressed}) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.all(16),
+        elevation: 3,
+        backgroundColor: Colors.blueGrey[50],
+        foregroundColor: Colors.black87,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      onPressed: onPressed,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 36, color: Colors.blue),
+          const SizedBox(height: 12),
+          Text(label,
+              textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
+        ],
+      ),
     );
   }
 
@@ -316,12 +472,47 @@ class HomeScreen extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
               "Welcome, ${user?.email ?? "User"}!",
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 10),
+            if (_isLoading)
+            const CircularProgressIndicator()
+          else
+            Column(
+              children: [
+                const Text(
+                  'Your Current Weather',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _weatherInfo?.split('\n').first ?? '',
+                  style: const TextStyle(
+                    fontSize: 36,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _weatherInfo?.split('\n').last ?? '',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+
             const SizedBox(height: 20),
             Expanded(
               child: GridView.count(
@@ -351,17 +542,6 @@ class HomeScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  // _buildDashboardButton(
-                  //   context,
-                  //   icon: Icons.post_add,
-                  //   label: "Make a Postcard",
-                  //   onPressed: () {
-                  //     Navigator.push(
-                  //       context,
-                  //       MaterialPageRoute(builder: (_) => const PostcardMakerScreen()),
-                  //     );
-                  //   },
-                  // ),
                   _buildDashboardButton(
                     context,
                     icon: Icons.notes,
@@ -400,31 +580,8 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildDashboardButton(BuildContext context,
-      {required IconData icon,
-      required String label,
-      required VoidCallback onPressed}) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.all(16),
-        elevation: 3,
-        backgroundColor: Colors.blueGrey[50],
-        foregroundColor: Colors.black87,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      onPressed: onPressed,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 36, color: Colors.blue),
-          const SizedBox(height: 12),
-          Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
-        ],
-      ),
-    );
-  }
 }
+
 
 // ---------------------------------------WEATHER FORECAST SCREEN---------------------------------------
 
