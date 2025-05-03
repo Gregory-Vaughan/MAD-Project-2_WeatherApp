@@ -466,7 +466,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Weatherly Dashboard'),
+        title: Row(
+        children: const [
+          Icon(Icons.cloud, color: Colors.blueAccent),
+          SizedBox(width: 8),
+          Text(
+            'Weatherly Dashboard',
+            style: TextStyle(
+              color: Colors.blueAccent,
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
+          ),
+        ],
+      ),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
