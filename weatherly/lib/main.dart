@@ -294,6 +294,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Weatherly Dashboard'),
@@ -305,85 +306,118 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               "Welcome, ${user?.email ?? "User"}!",
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const WeatherScreen()),
-                );
-              },
-              child: const Text("Weather Forecast"),
-            ),
-
-// for new MAP screen
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const MapScreen()),
-                );
-              },
-              child: const Text("View Map"),
-            ),
-
-
-          ElevatedButton.icon(
-            icon: const Icon(Icons.post_add),
-           label: const Text("Make a Postcard"),
-            onPressed: () {
-           Navigator.push(
-          context,
-          MaterialPageRoute(
-          builder: (context) => const PostcardMakerScreen(),
-          ),
-        );
-      },
-    ),
-
-            ElevatedButton(
-              onPressed: () {}, // TODO: Go to Postcard Maker
-              child: const Text("Create Postcard"),
-            ),
-
-            
-            ElevatedButton(
-            onPressed: () {
-             Navigator.of(context).push(
-             MaterialPageRoute(builder: (_) => const CommunityNotesScreen()),
-             );
-             },
-            child: const Text("Community Notes"),
-            ),
-            
-           
-           ElevatedButton(
-            onPressed: () {
-            Navigator.of(context).push(
-             MaterialPageRoute(builder: (_) => const ProfileScreen()),
-            );
-            },
-            child: const Text("Profile"),
-            ),
-           
-
-            ElevatedButton(
-              onPressed: () {}, // TODO: Go to Theme settings
-              child: const Text("Theme Settings"),
+            const SizedBox(height: 20),
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.2,
+                children: [
+                  _buildDashboardButton(
+                    context,
+                    icon: Icons.cloud,
+                    label: "Weather Forecast",
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const WeatherScreen()),
+                      );
+                    },
+                  ),
+                  _buildDashboardButton(
+                    context,
+                    icon: Icons.map,
+                    label: "View Map",
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const MapScreen()),
+                      );
+                    },
+                  ),
+                  _buildDashboardButton(
+                    context,
+                    icon: Icons.post_add,
+                    label: "Make a Postcard",
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PostcardMakerScreen()),
+                      );
+                    },
+                  ),
+                  _buildDashboardButton(
+                    context,
+                    icon: Icons.notes,
+                    label: "Community Notes",
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const CommunityNotesScreen()),
+                      );
+                    },
+                  ),
+                  _buildDashboardButton(
+                    context,
+                    icon: Icons.person,
+                    label: "Profile",
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                      );
+                    },
+                  ),
+                  _buildDashboardButton(
+                    context,
+                    icon: Icons.settings,
+                    label: "Theme Settings",
+                    onPressed: () {
+                      // TODO: Go to Theme settings
+                    },
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
+  Widget _buildDashboardButton(BuildContext context,
+      {required IconData icon,
+      required String label,
+      required VoidCallback onPressed}) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.all(16),
+        elevation: 3,
+        backgroundColor: Colors.blueGrey[50],
+        foregroundColor: Colors.black87,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      onPressed: onPressed,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 36, color: Colors.blue),
+          const SizedBox(height: 12),
+          Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
+        ],
+      ),
+    );
+  }
 }
+
 // ---------------------------------------WEATHER FORECAST SCREEN---------------------------------------
 
 class WeatherScreen extends StatefulWidget {
