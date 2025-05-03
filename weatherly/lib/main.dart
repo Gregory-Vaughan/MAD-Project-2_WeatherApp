@@ -39,8 +39,56 @@ class WeatherlyRoot extends StatelessWidget {
         return MaterialApp(
           title: 'Weatherly',
           debugShowCheckedModeBanner: false,
-          theme: ThemeData.light(),
-          darkTheme: ThemeData.dark(),
+          
+          theme: ThemeData(
+          brightness: Brightness.light,
+          scaffoldBackgroundColor: const Color(0xFFF8F9FC), // soft off-white
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Color(0xFFE3F2FD), // light sky blue tone
+            foregroundColor: Colors.black87,
+            elevation: 2,
+          ),
+          cardColor: const Color(0xFFFFFFFF), // bright for content blocks
+          dialogBackgroundColor: const Color(0xFFFFFFFF),
+          colorScheme: ColorScheme.light(
+            primary: Colors.blueAccent,
+            secondary: Colors.lightBlueAccent,
+            surface: Colors.white,
+          ),
+          textTheme: ThemeData.light().textTheme.apply(
+                bodyColor: Colors.black87,
+                displayColor: Colors.black87,
+              ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ),
+
+          
+          darkTheme: ThemeData(
+          brightness: Brightness.dark,
+          scaffoldBackgroundColor: const Color(0xFF1F1F2E), // softened dark
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Color(0xFF2C2C3E), // slightly lighter for contrast
+            foregroundColor: Colors.white,
+            elevation: 2,
+          ),
+          cardColor: const Color(0xFF2A2A3A),
+          dialogBackgroundColor: const Color(0xFF2A2A3A),
+          colorScheme: ColorScheme.dark(
+            primary: Colors.blueAccent,
+            secondary: Colors.lightBlueAccent,
+            surface: const Color(0xFF2A2A3A),
+          ),
+          textTheme: ThemeData.dark().textTheme.apply(
+                bodyColor: Colors.white.withOpacity(0.9),
+                displayColor: Colors.white,
+              ),
+        ),
+
           themeMode: mode,
           home: const SplashScreen(),
         );
@@ -461,6 +509,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final displayName = user?.displayName ?? "User";
+
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final weatherTextColor = isDarkMode ? Colors.black87 : Colors.black;
 
@@ -493,7 +543,7 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Text(
-              "Welcome, ${user?.email ?? "User"}!",
+              "Welcome, $displayName!",
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
@@ -658,6 +708,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
   Future<void> _loadCityFromFirestore() async {
   final user = FirebaseAuth.instance.currentUser;
+
   if (user == null) return;
 
   final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
