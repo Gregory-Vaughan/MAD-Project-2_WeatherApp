@@ -642,6 +642,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                   ),
+
+                  _buildDashboardButton(
+                    context,
+                    icon: Icons.card_giftcard,
+                    label: "Create Postcard",
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const PostcardMakerScreen()),
+                      );
+                    },
+                  ),
+
                   _buildDashboardButton(
                     context,
                     icon: Icons.person,
